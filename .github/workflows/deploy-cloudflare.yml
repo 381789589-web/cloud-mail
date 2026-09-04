@@ -61,6 +61,11 @@ jobs:
       - name: 🛠️ 设置环境 / Set up environment
         working-directory: ./mail-worker
         run: |
+          trim() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          CUSTOM_DOMAIN=$(trim "$CUSTOM_DOMAIN")
+          DOMAIN=$(trim "$DOMAIN")
+          ADMIN=$(trim "$ADMIN")
+          JWT_SECRET=$(trim "$JWT_SECRET")
           
           echo "🔐 Starting environment setup..."
           

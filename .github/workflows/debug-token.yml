@@ -1,0 +1,35 @@
+name: Debug Token
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect token in Actions environment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "=== 1. Basic info (no full token exposed) ==="
+          echo "token_length=${#CLOUDFLARE_API_TOKEN}"
+          echo "token_prefix=${CLOUDFLARE_API_TOKEN:0:7}"
+          echo "account_id=$CLOUDFLARE_ACCOUNT_ID"
+          echo ""
+          echo "=== 2. Token verify ==="
+          curl -s https://api.cloudflare.com/client/v4/user/tokens/verify \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          echo ""
+          echo ""
+          echo "=== 3. Account-level WRITE test (POST) ==="
+          curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"title":"ci-perm-test"}'
+          echo ""
+          echo ""
+          echo "=== 4. Worker services read test ==="
+          curl -s "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | head -c 200
